@@ -2,72 +2,153 @@
 
 API educativa de FastAPI para reconstruir mensajes mediante un algoritmo genético, clasificar perfiles cardíacos mediante un árbol de decisión y agrupar puntos mediante K-Means.
 
-## Instalación y ejecución
+Backend desarrollado en **Python 3.10+** con **FastAPI** que expone tres endpoints HTTP (`POST`) independientes para resolver problemas clásicos de Inteligencia Artificial:
 
-Requiere Python 3.10 o posterior. Desde la raíz del repositorio, en PowerShell:
+1. **Algoritmo Genético (`POST /genetico`)**: Reconstrucción evolutiva de una cadena de texto objetivo.
+2. **Aprendizaje Supervisado (`POST /arbol_decision`)**: Clasificación de riesgo cardiaco mediante un Árbol de Decisión (`DecisionTreeClassifier`).
+3. **Aprendizaje No Supervisado (`POST /cluster`)**: Segmentación de datos multidimensionales mediante `KMeans`, retornando centroides finales, etiquetas e inercia WCSS.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn main:app --reload
-```
+---
 
-En macOS o Linux, usa `.venv/bin/python` en los dos últimos comandos.
+## Arquitectura del Proyecto
 
-Abre [Swagger UI](http://localhost:8000/docs), expande un endpoint, elige **Try it out**, pega el JSON correspondiente y pulsa **Execute**.
+El proyecto mantiene una arquitectura modular con punto de acceso único en `main.py`:
 
-## Endpoints
+proyecto_final_ia/
+├── main.py                         # Inicialización de FastAPI y declaración exclusiva de endpoints
+├── models.py                       # Modelos Pydantic de validación estricta (Request / Response)
+├── services.py                     # Implementación y ejecución de los algoritmos de IA
+├── dataset_cardiaco_simulado.csv   # Conjunto de datos clínicos para entrenamiento del modelo
+├── requirements.txt                # Dependencias del entorno
+└── README.md                       # Documentación y manual de ejecución
 
-Envía los cuerpos con `Content-Type: application/json`. Los tres endpoints devuelven JSON con HTTP 200 al completar el cálculo y HTTP 422 cuando la entrada es inválida. Los campos adicionales y las cadenas en campos numéricos se rechazan.
+---
 
-### POST /genetico
+## Instalación y Ejecución
 
-```json
+### 1. Clonar el repositorio e ingresar al directorio
+
+git clone <URL_DEL_REPOSITORIO>
+cd proyecto_final_ia
+
+### 2. Crear y activar un entorno virtual (recomendado)
+
+En Linux / macOS:
+python -m venv venv
+source venv/bin/activate
+
+En Windows (PowerShell):
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+### 3. Instalar dependencias
+
+pip install -r requirements.txt
+
+### 4. Iniciar el servidor con Uvicorn
+
+uvicorn main:app --reload
+
+La API quedará disponible en http://127.0.0.1:8000 y la interfaz interactiva Swagger UI en:
+- http://127.0.0.1:8000/docs
+
+---
+
+## Especificación y Ejemplos de Consumo
+
+### 1. Algoritmo Genético — POST /genetico
+
+Reconstruye un mensaje oculto mediante selección por torneo, cruce de un punto, mutación puntual y elitismo.
+
+Ejemplo cURL:
+curl -X POST "http://127.0.0.1:8000/genetico" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mensaje_oculto": "IA EVOLUTIVA 2026",
+    "tam_poblacion": 120,
+    "max_generaciones": 500,
+    "prob_cruce": 0.85,
+    "prob_mutacion": 0.15
+  }'
+
+Ejemplo de respuesta (200 OK):
 {
-  "mensaje_oculto": "IA EVOLUTIVA 2026",
-  "tam_poblacion": 150,
-  "max_generaciones": 300,
-  "prob_cruce": 0.8,
-  "prob_mutacion": 0.3
+  "estado": "exitoso",
+  "mensaje_oculto_objetivo": "IA EVOLUTIVA 2026",
+  "solucion_obtenida": "IA EVOLUTIVA 2026",
+  "aptitud_alcanzada": 17,
+  "generaciones_ejecutadas": 42,
+  "convergencia": true,
+  "historial_fitness_max": [5, 8, 11, 14, 17]
 }
-```
 
-La población admite entre 11 y 500 individuos y el límite entre 2 y 1000 generaciones. Las probabilidades de cruce y mutación admiten de 0 a 1 y de 0 a 0.5, respectivamente. El algoritmo toma el alfabeto del mensaje objetivo, aplica selección por torneo, cruce de un punto, mutación de un carácter y elitismo. La aptitud cuenta las posiciones que coinciden con el objetivo. La primera entrada del historial corresponde a la población inicial. Si se agota el límite, la API devuelve el mejor individuo encontrado con `convergencia: false`.
+### 2. Árbol de Decisión — POST /arbol_decision
 
-### POST /arbol_decision
+Evalúa parámetros clínicos de un paciente y devuelve el diagnóstico predicho, probabilidad de riesgo y nivel de riesgo (Bajo, Moderado, Alto).
 
-```json
+Ejemplo cURL:
+curl -X POST "http://127.0.0.1:8000/arbol_decision" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "edad": 55,
+    "presion_sistolica": 145,
+    "colesterol": 240,
+    "frecuencia_max": 130,
+    "angina_ejercicio": 1
+  }'
+
+Ejemplo de respuesta (200 OK):
 {
-  "edad": 55,
-  "presion_sistolica": 145,
-  "colesterol": 240,
-  "frecuencia_max": 130,
-  "angina_ejercicio": 1
+  "estado": "exitoso",
+  "paciente_evaluado": {
+    "edad": 55,
+    "presion_sistolica": 145,
+    "colesterol": 240,
+    "frecuencia_max": 130,
+    "angina_ejercicio": 1
+  },
+  "clase_predicha": 1,
+  "diagnostico_texto": "Riesgo de Afección Cardiaca Detectado",
+  "probabilidad_riesgo": 0.88,
+  "nivel_riesgo": "Alto"
 }
-```
 
-La edad debe estar entre 18 y 100 años, la presión sistólica entre 80 y 220 mmHg, el colesterol entre 100 y 500 mg/dL y la frecuencia máxima entre 60 y 220 latidos por minuto. Usa 0 para ausencia de angina durante el ejercicio y 1 para presencia.
+### 3. Clustering K-Means — POST /cluster
 
-Al cargar la aplicación se entrena el árbol podado de la práctica con `dataset_cardiaco_simulado.csv`. Se usa una división estratificada de 80 % para entrenamiento y 20 % reservado para pruebas, con semilla 10. El árbol usa entropía, profundidad máxima de 3 y un mínimo de 5 muestras por hoja.
+Agrupa una matriz rectangular dinámica de datos numéricos en k_clusters grupos y calcula los centroides finales y la inercia WCSS.
 
-La respuesta incluye el perfil evaluado, la clase, su descripción, la proporción de clase 1 en la hoja y el nivel de riesgo. El nivel es bajo por debajo de 0.30, moderado desde 0.30 y alto desde 0.70. El dataset es simulado y la salida carece de validación clínica.
+Ejemplo cURL:
+curl -X POST "http://127.0.0.1:8000/cluster" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "k_clusters": 3,
+    "max_iteraciones": 100,
+    "datos": [
+      [25.0, 60.0],
+      [55.0, 49.0],
+      [80.0, 15.0],
+      [26.0, 61.0],
+      [54.0, 48.0]
+    ]
+  }'
 
-### POST /cluster
-
-```json
+Ejemplo de respuesta (200 OK):
 {
-  "k_clusters": 3,
-  "max_iteraciones": 100,
-  "datos": [[1, 1], [1, 2], [8, 8], [8, 9], [20, 1], [21, 1]]
+  "estado": "exitoso",
+  "k_utilizado": 3,
+  "num_muestras": 5,
+  "centroides_finales": [
+    [25.5, 60.5],
+    [80.0, 15.0],
+    [54.5, 48.5]
+  ],
+  "etiquetas_asignadas": [0, 2, 1, 0, 2],
+  "inercia_wcss": 2.0
 }
-```
 
-Se admiten de 2 a 10 grupos y entre 6 y 500 iteraciones por inicialización. Cada fila representa un punto con el mismo número de coordenadas finitas y debe haber al menos tantos puntos distintos como grupos. K-Means conserva el orden de las muestras en las etiquetas y usa índices desde 0, que apuntan a los centroides. La inercia WCSS es la suma de las distancias euclidianas al cuadrado entre cada punto y su centroide asignado.
+---
 
-## Estructura
+## Manejo de Errores de Validación
 
-- `main.py` inicializa FastAPI y declara los tres endpoints.
-- `models.py` concentra los modelos Pydantic de entrada y salida.
-- `services.py` implementa el algoritmo genético, el árbol de decisión y K-Means.
-- `dataset_cardiaco_simulado.csv` contiene los datos simulados de la práctica del árbol de decisión.
-- `requirements.txt` declara las dependencias de ejecución.
+Todas las entradas se validan mediante Pydantic. Si algún parámetro incumple su tipo, rango permitido o estructura esperada, la API responde automáticamente con código HTTP 422 Unprocessable Entity detallando el campo y el motivo del error.
+
