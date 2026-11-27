@@ -9,10 +9,10 @@ class Esquema(BaseModel):
 
 class GeneticoRequest(Esquema):
     mensaje_oculto: str = Field(min_length=1, examples=["IA EVOLUTIVA 2026"])
-    tam_poblacion: int = Field(gt=10, le=500, examples=[150])
-    max_generaciones: int = Field(gt=1, le=1000, examples=[300])
-    prob_cruce: float = Field(ge=0.0, le=1.0, examples=[0.8])
-    prob_mutacion: float = Field(ge=0.0, le=0.5, examples=[0.3])
+    tam_poblacion: int = Field(gt=10, le=500, examples=[150, 200])
+    max_generaciones: int = Field(gt=1, le=1000, examples=[300, 500])
+    prob_cruce: float = Field(ge=0.0, le=1.0, examples=[0.8, 0.9])
+    prob_mutacion: float = Field(ge=0.0, le=0.5, examples=[0.3, 0.1])
 
 
 class GeneticoResponse(Esquema):
