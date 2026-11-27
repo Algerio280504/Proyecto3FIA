@@ -8,11 +8,11 @@ class Esquema(BaseModel):
 
 
 class GeneticoRequest(Esquema):
-    mensaje_oculto: str = Field(min_length=1)
-    tam_poblacion: int = Field(gt=10, le=500)
-    max_generaciones: int = Field(gt=1, le=1000)
-    prob_cruce: float = Field(ge=0.0, le=1.0)
-    prob_mutacion: float = Field(ge=0.0, le=0.5)
+    mensaje_oculto: str = Field(min_length=1, examples=["IA EVOLUTIVA 2026"])
+    tam_poblacion: int = Field(gt=10, le=500, examples=[150])
+    max_generaciones: int = Field(gt=1, le=1000, examples=[300])
+    prob_cruce: float = Field(ge=0.0, le=1.0, examples=[0.8])
+    prob_mutacion: float = Field(ge=0.0, le=0.5, examples=[0.3])
 
 
 class GeneticoResponse(Esquema):
@@ -26,11 +26,11 @@ class GeneticoResponse(Esquema):
 
 
 class ArbolDecisionRequest(Esquema):
-    edad: int = Field(ge=18, le=100)
-    presion_sistolica: int = Field(ge=80, le=220)
-    colesterol: int = Field(ge=100, le=500)
-    frecuencia_max: int = Field(ge=60, le=220)
-    angina_ejercicio: int = Field(ge=0, le=1)
+    edad: int = Field(ge=18, le=100, examples=[55])
+    presion_sistolica: int = Field(ge=80, le=220, examples=[145])
+    colesterol: int = Field(ge=100, le=500, examples=[240])
+    frecuencia_max: int = Field(ge=60, le=220, examples=[130])
+    angina_ejercicio: int = Field(ge=0, le=1, examples=[1])
 
 
 class ArbolDecisionResponse(Esquema):
@@ -43,9 +43,12 @@ class ArbolDecisionResponse(Esquema):
 
 
 class ClusterRequest(Esquema):
-    k_clusters: int = Field(ge=2, le=10)
-    max_iteraciones: int = Field(gt=5, le=500)
-    datos: list[list[FiniteFloat]] = Field(min_length=2)
+    k_clusters: int = Field(ge=2, le=10, examples=[3])
+    max_iteraciones: int = Field(gt=5, le=500, examples=[100])
+    datos: list[list[FiniteFloat]] = Field(
+        min_length=2,
+        examples=[[[1, 1], [1, 2], [8, 8], [8, 9], [20, 1], [21, 1]]],
+    )
 
     @model_validator(mode="after")
     def validar_matriz(self) -> "ClusterRequest":

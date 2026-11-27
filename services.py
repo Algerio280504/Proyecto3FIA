@@ -95,7 +95,7 @@ def evaluar_paciente(entrada: ArbolDecisionRequest) -> ArbolDecisionResponse:
     ]]
     clase = int(_ARBOL.predict(perfil)[0])
     columna_riesgo = _ARBOL.classes_.tolist().index(1)
-    probabilidad = float(_ARBOL.predict_proba(perfil)[0, columna_riesgo])
+    probabilidad = round(float(_ARBOL.predict_proba(perfil)[0, columna_riesgo]), 4)
     nivel = "Bajo"
     if probabilidad >= 0.7:
         nivel = "Alto"
@@ -136,7 +136,7 @@ def agrupar_datos(entrada: ClusterRequest) -> ClusterResponse:
     return ClusterResponse(
         k_utilizado=entrada.k_clusters,
         num_muestras=datos.shape[0],
-        centroides_finales=modelo.cluster_centers_.tolist(),
+        centroides_finales=np.round(modelo.cluster_centers_, 4).tolist(),
         etiquetas_asignadas=modelo.labels_.tolist(),
-        inercia_wcss=float(modelo.inertia_),
+        inercia_wcss=round(float(modelo.inertia_), 4),
     )
